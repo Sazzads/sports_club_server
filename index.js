@@ -44,7 +44,7 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        const classCollection = client.db('sportsClub').collection('classes')
+        const classCollection = client.db('sportsClub').collection('allclasses')
         const userCollection = client.db('sportsClub').collection('users')
 
         // jwt api 
@@ -184,12 +184,33 @@ async function run() {
 
         //add classes api----------------
         // ------------------------------
-        
-        app.post('/addClasses', async (req, res) => {
+
+        app.post('/allclasses',verifyJWT,verifyInstructor, async (req, res) => {
             const addClass = req.body;
             const result = await classCollection.insertOne(addClass)
             res.send(result)
 
+        })
+
+        //instructor added all classes
+        app.get('/allclasses/:email', async (req, res) => {
+            const email = req.query.email;
+
+            // if (!email) {
+            //     res.send([])
+            // }
+
+            // const decodedEmail = req.decoded.email;
+            // if (email !== decodedEmail) {
+
+            //     return res.status(403).send({ error: true, message: 'access denied' })
+            // }
+            // const query = { email: email }
+            // const result = await classCollection.find(query).toArray();
+            // res.send(result)
+            console.log(req.params.email);
+            const result = await classCollection.find({ email: req.params.email }).toArray()
+            res.send(result)
         })
 
 
