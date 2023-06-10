@@ -46,6 +46,7 @@ async function run() {
 
         const classCollection = client.db('sportsClub').collection('allclasses')
         const userCollection = client.db('sportsClub').collection('users')
+        const cartCollection = client.db('sportsClub').collection('carts')
 
         // jwt api 
         app.post('/jwt', (req, res) => {
@@ -261,12 +262,25 @@ async function run() {
 
         //get approved classes
         app.get(('/approvedclass/:text'), async (req, res) => {
-            console.log(req.params.text);
-            if(req.params.text=='approved'){
-                const result=await classCollection.find({status:req.params.text}).toArray()
+            // console.log(req.params.text);
+            if (req.params.text == 'approved') {
+                const result = await classCollection.find({ status: req.params.text }).toArray()
                 return res.send(result)
             }
         })
+        // -----------------------------------------------------
+        //.......student selected cart collection related api-----------
+        // -------------------------------------------------------
+        app.post('/carts', async (req, res) => {
+            const item = req.body;
+            console.log(item);
+            const result = await cartCollection.insertOne(item)
+            res.send(result);
+        })
+
+
+
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
