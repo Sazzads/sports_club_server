@@ -281,13 +281,13 @@ async function run() {
         })
 
         //get cart data from specific users email
-        app.get('/carts',verifyStudent, verifyJWT, async (req, res) => {
+        app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
             // console.log(email);
-            // if (!email) {
-            //     res.send([])
-            // }
-            // else {
+            if (!email) {
+                res.send([])
+            }
+            else {
 
             //new
             const decodeEmail = req.decoded.email;
@@ -300,7 +300,7 @@ async function run() {
             const result = await cartCollection.find(query).toArray();
             // console.log(result);
             res.send(result)
-            // }
+            }
         })
 
         //delete cart course
