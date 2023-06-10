@@ -271,11 +271,28 @@ async function run() {
         // -----------------------------------------------------
         //.......student selected cart collection related api-----------
         // -------------------------------------------------------
+
+        //post cart data from select button
         app.post('/carts', async (req, res) => {
             const item = req.body;
             console.log(item);
             const result = await cartCollection.insertOne(item)
             res.send(result);
+        })
+
+        //get cart data from specific users email
+        app.get('/carts', async (req, res) => {
+            const email = req.query.email;
+            // console.log(email);
+            // if (!email) {
+            //     res.send([])
+            // }
+            // else {
+                const query = { email: email };
+                const result = await cartCollection.find(query).toArray();
+                // console.log(result);
+                res.send(result)
+            // }
         })
 
 
