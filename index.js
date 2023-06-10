@@ -273,7 +273,7 @@ async function run() {
         // -------------------------------------------------------
 
         //post cart data from select button
-        app.post('/carts', async (req, res) => {
+        app.post('/carts',verifyStudent, async (req, res) => {
             const item = req.body;
             console.log(item);
             const result = await cartCollection.insertOne(item)
@@ -281,13 +281,21 @@ async function run() {
         })
 
         //get cart data from specific users email
-        app.get('/carts', async (req, res) => {
+        app.get('/carts',verifyStudent, verifyJWT, async (req, res) => {
             const email = req.query.email;
             // console.log(email);
             // if (!email) {
             //     res.send([])
             // }
             // else {
+
+            //new
+            const decodeEmail = req.decoded.email;
+            if (email !== decodeEmail) {
+                return res.status(403).send({ error: true, message: 'unauthorized' })
+            }
+            //new
+
             const query = { email: email };
             const result = await cartCollection.find(query).toArray();
             // console.log(result);
