@@ -202,19 +202,6 @@ async function run() {
 
         //instructor added all classes
         app.get('/allclasses/:email', async (req, res) => {
-            // const email = req.query.email;
-            // if (!email) {
-            //     res.send([])
-            // }
-            // const decodedEmail = req.decoded.email;
-            // if (email !== decodedEmail) {
-
-            //     return res.status(403).send({ error: true, message: 'access denied' })
-            // }
-            // const query = { email: email }
-            // const result = await classCollection.find(query).toArray();
-            // res.send(result)
-
             const email = req.query.email;
             // console.log(req.params.email);
             const result = await classCollection.find({ email: req.params.email }).toArray()
@@ -273,13 +260,13 @@ async function run() {
         })
 
         //get approved classes
-        // app.get(('/approvedclass'),async(req,res)=>{
-        //     const email = req.query.email;
-        //     // console.log(req.params.email);
-        //     const result = await classCollection.find({ email: req.params.email }).toArray()
-        //     res.send(result)
-
-        // })
+        app.get(('/approvedclass/:text'), async (req, res) => {
+            console.log(req.params.text);
+            if(req.params.text=='approved'){
+                const result=await classCollection.find({status:req.params.text}).toArray()
+                return res.send(result)
+            }
+        })
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
