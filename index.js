@@ -288,13 +288,20 @@ async function run() {
             //     res.send([])
             // }
             // else {
-                const query = { email: email };
-                const result = await cartCollection.find(query).toArray();
-                // console.log(result);
-                res.send(result)
+            const query = { email: email };
+            const result = await cartCollection.find(query).toArray();
+            // console.log(result);
+            res.send(result)
             // }
         })
-
+        
+        //delete cart course
+        app.delete('/carts/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const res = await cartCollection.deleteOne(query);
+            res.send(res)
+        })
 
 
 
