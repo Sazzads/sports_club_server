@@ -85,6 +85,13 @@ async function run() {
             next()
         }
 
+        //all instructors api
+        app.get('/allinstructor/:role', async (req, res) => {
+            console.log(req.params.role);
+            const result = await userCollection.find({ role: req.params.role }).toArray()
+            res.send(result)
+        })
+
         /*        users api------------------------
                --------------------------------- */
 
@@ -185,21 +192,20 @@ async function run() {
         //add classes api----------------
         // ------------------------------
 
-        app.post('/allclasses',verifyJWT,verifyInstructor, async (req, res) => {
+        app.post('/allclasses', verifyJWT, verifyInstructor, async (req, res) => {
             const addClass = req.body;
             const result = await classCollection.insertOne(addClass)
             res.send(result)
 
         })
 
+
         //instructor added all classes
         app.get('/allclasses/:email', async (req, res) => {
-            const email = req.query.email;
-
+            // const email = req.query.email;
             // if (!email) {
             //     res.send([])
             // }
-
             // const decodedEmail = req.decoded.email;
             // if (email !== decodedEmail) {
 
@@ -208,12 +214,72 @@ async function run() {
             // const query = { email: email }
             // const result = await classCollection.find(query).toArray();
             // res.send(result)
-            console.log(req.params.email);
+
+            const email = req.query.email;
+            // console.log(req.params.email);
             const result = await classCollection.find({ email: req.params.email }).toArray()
             res.send(result)
         })
 
+        //add ,verifyJWT, verifyAdmin TODO
+        app.get('/allclasses', async (req, res) => {
+            const result = await classCollection.find({}).toArray();
+            res.send(result);
+        })
 
+        //update class pending status
+        app.patch('/allclass/:id', async (req, res) => {
+            const id = req.params;
+            console.log(id);
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    status: 'approved'
+                },
+            };
+            const result = await classCollection.updateOne(filter, updateDoc)
+            res.send(result)
+        })
+
+        //
+
+        app.patch('/allclasss/:id', async (req, res) => {
+            const id = req.params;
+            console.log(id);
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    status: 'deny'
+                },
+            };
+            const result = await classCollection.updateOne(filter, updateDoc)
+            res.send(result)
+        })
+
+        //feedback
+        app.put('/allclass/:id', async (req, res) => {
+            const id = req.params.id;
+            const feedback = req.body;
+            console.log(id, feedback);
+            const filter = { _id: new ObjectId(id) }
+            options = { upsert: true }
+            const updatedFeedback = {
+                $set: {
+                    feedback: feedback.feedback
+                }
+            }
+            const result = await classCollection.updateOne(filter, updatedFeedback, options)
+            res.send(result)
+        })
+
+        //get approved classes
+        // app.get(('/approvedclass'),async(req,res)=>{
+        //     const email = req.query.email;
+        //     // console.log(req.params.email);
+        //     const result = await classCollection.find({ email: req.params.email }).toArray()
+        //     res.send(result)
+
+        // })
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
