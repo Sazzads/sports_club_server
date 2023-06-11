@@ -3,6 +3,7 @@ const app = express()
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const port = process.env.PORT || 5000
 
 // middleware
@@ -141,7 +142,7 @@ async function run() {
         //make instructor
         app.patch('/users/instructor/:id', async (req, res) => {
             const id = req.params;
-            console.log(id);
+            // console.log(id);
             const filter = { _id: new ObjectId(id) }
             const updateDoc = {
                 $set: {
@@ -273,7 +274,7 @@ async function run() {
         // -------------------------------------------------------
 
         //post cart data from select button
-        app.post('/carts',verifyStudent, async (req, res) => {
+        app.post('/carts', verifyStudent, async (req, res) => {
             const item = req.body;
             console.log(item);
             const result = await cartCollection.insertOne(item)
@@ -289,17 +290,17 @@ async function run() {
             }
             else {
 
-            //new
-            const decodeEmail = req.decoded.email;
-            if (email !== decodeEmail) {
-                return res.status(403).send({ error: true, message: 'unauthorized' })
-            }
-            //new
+                //new
+                const decodeEmail = req.decoded.email;
+                if (email !== decodeEmail) {
+                    return res.status(403).send({ error: true, message: 'unauthorized' })
+                }
+                //new
 
-            const query = { email: email };
-            const result = await cartCollection.find(query).toArray();
-            // console.log(result);
-            res.send(result)
+                const query = { email: email };
+                const result = await cartCollection.find(query).toArray();
+                // console.log(result);
+                res.send(result)
             }
         })
 
@@ -311,7 +312,37 @@ async function run() {
             res.send(result)
         })
 
+        /* ------------------------------
+        ------------card api----------
+        ----------------------------- */
 
+        // create payment in stripe api
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                payment_method_types: ['card']
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        })
+        // app.post('/create-payment-intent', async (req, res) => {
+        //     const { price } = req.body;
+        //     const amount = parseInt(price * 100);
+        //     console.log(price,amount);
+        //     const paymentIntent = await stripe.paymentIntents.create({
+        //         amount: amount,
+        //         currency: 'usd',
+        //         payment_method_types: ['card']
+        //     });
+
+        //     res.send({
+        //         clientSecret: paymentIntent.client_secret
+        //     })
+        // })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
