@@ -48,6 +48,7 @@ async function run() {
         const classCollection = client.db('sportsClub').collection('allclasses')
         const userCollection = client.db('sportsClub').collection('users')
         const cartCollection = client.db('sportsClub').collection('carts')
+        const payCollection = client.db('sportsClub').collection('pays')
 
         // jwt api 
         app.post('/jwt', (req, res) => {
@@ -67,15 +68,15 @@ async function run() {
             next()
         }
         //student check secure middleware
-        const verifyStudent = async (req, res, next) => {
-            const email = req.decoded.email;
-            const query = { email: email }
-            const user = await userCollection.findOne(query);
-            if (user?.role !== 'student') {
-                return res.status(403).send({ error: true, message: 'error message' })
-            }
-            next()
-        }
+        // const verifyStudent = async (req, res, next) => {
+        //     const email = req.decoded.email;
+        //     const query = { email: email }
+        //     const user = await userCollection.findOne(query);
+        //     if (user?.role !== 'student') {
+        //         return res.status(403).send({ error: true, message: 'error message' })
+        //     }
+        //     next()
+        // }
         //instructor check secure middleware
         const verifyInstructor = async (req, res, next) => {
             const email = req.decoded.email;
@@ -89,7 +90,7 @@ async function run() {
 
         //all instructors api
         app.get('/allinstructor/:role', async (req, res) => {
-            console.log(req.params.role);
+            // console.log(req.params.role);
             const result = await userCollection.find({ role: req.params.role }).toArray()
             res.send(result)
         })
@@ -166,11 +167,11 @@ async function run() {
         })
 
         //check student
-        app.get('/users/student/:email', verifyJWT, async (req, res) => {
+        app.get('/users/student/:email', async (req, res) => {
             const email = req.params.email;
-            if (req.decoded.email !== email) {
-                res.send({ student: false })
-            }
+            // if (req.decoded.email !== email) {
+            //     res.send({ student: false })
+            // }
             const query = { email: email }
             const user = await userCollection.findOne(query);
             const result = { student: user?.role === 'student' }
@@ -194,7 +195,7 @@ async function run() {
         //add classes api----------------
         // ------------------------------
 
-        app.post('/allclasses', verifyJWT, verifyInstructor, async (req, res) => {
+        app.post('/allclasses', verifyJWT, async (req, res) => {
             const addClass = req.body;
             const result = await classCollection.insertOne(addClass)
             res.send(result)
@@ -274,9 +275,9 @@ async function run() {
         // -------------------------------------------------------
 
         //post cart data from select button
-        app.post('/carts', verifyStudent, async (req, res) => {
+        app.post('/carts', async (req, res) => {
             const item = req.body;
-            console.log(item);
+            // console.log(item);
             const result = await cartCollection.insertOne(item)
             res.send(result);
         })
@@ -312,6 +313,14 @@ async function run() {
             res.send(result)
         })
 
+
+        app.get("/carts/:id", async (req, res) => {
+            // console.log(req.params.id);
+            const a = (req.params.id);
+            const result = await cartCollection.find({ _id: new ObjectId(a) }).toArray()
+            res.send(result)
+        })
+
         /* ------------------------------
         ------------card api----------
         ----------------------------- */
@@ -329,20 +338,45 @@ async function run() {
                 clientSecret: paymentIntent.client_secret,
             });
         })
-        // app.post('/create-payment-intent', async (req, res) => {
-        //     const { price } = req.body;
-        //     const amount = parseInt(price * 100);
-        //     console.log(price,amount);
-        //     const paymentIntent = await stripe.paymentIntents.create({
-        //         amount: amount,
-        //         currency: 'usd',
-        //         payment_method_types: ['card']
-        //     });
 
-        //     res.send({
-        //         clientSecret: paymentIntent.client_secret
-        //     })
+        // payment card information api
+
+
+        // app.post('/pays', async (req, res) => {
+        //     const payment = req.body;
+        //     const result = await payCollection.insertOne(payment)
+        //     res.send(result)
+
         // })
+        app.post('/pays', async (req, res) => {
+            const payment = req.body;
+            payment.createAt = new Date()
+            const insertResult = await payCollection.insertOne(payment)
+
+            const query = { _id: { $in: payment.cartId.map(id => new ObjectId(id)) } }
+            const deleteResult = await cartCollection.deleteMany(query)
+
+            
+
+            res.send({ insertResult, deleteResult })
+        })
+
+        //get payment history info
+        app.get('/pays', async (req, res) => {
+            const email = req.query.email;
+            // console.log(email);
+            if (!email) {
+                res.send([])
+            }
+            else {
+                const query = { email: email };
+                const result = await payCollection.find(query).sort({ createAt: -1 }).toArray();
+                // console.log(result);
+                res.send(result)
+            }
+        })
+
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
