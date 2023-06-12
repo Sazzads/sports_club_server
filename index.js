@@ -342,24 +342,20 @@ async function run() {
         // payment card information api
 
 
-        // app.post('/pays', async (req, res) => {
-        //     const payment = req.body;
-        //     const result = await payCollection.insertOne(payment)
-        //     res.send(result)
-
-        // })
         app.post('/pays', async (req, res) => {
             const payment = req.body;
             payment.createAt = new Date()
             const insertResult = await payCollection.insertOne(payment)
 
             const query = { _id: { $in: payment.cartId.map(id => new ObjectId(id)) } }
-            const deleteResult = await cartCollection.deleteMany(query)
+            const deleteResult = await cartCollection.deleteOne(query)
 
-            
+
 
             res.send({ insertResult, deleteResult })
         })
+
+
 
         //get payment history info
         app.get('/pays', async (req, res) => {
@@ -374,6 +370,17 @@ async function run() {
                 // console.log(result);
                 res.send(result)
             }
+        })
+
+        //update available seat 
+        app.put('/aallclass/:id', async (req, res) => {
+            const id = req.params.id;
+            const EnrolledSeat = req.body;
+            console.log(id, EnrolledSeat);
+            const filter = { _id: new ObjectId(id) }
+
+            const result = await classCollection.updateOne(filter,{ $inc: { EnrolledSeat: 1 } })
+            res.send(result)
         })
 
 
